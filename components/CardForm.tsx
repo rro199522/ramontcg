@@ -172,22 +172,6 @@ export const CardForm: React.FC<CardFormProps> = ({
                   </button>
                 )}
               </div>
-               {/* Image Vertical Offset Slider */}
-               <div className="mt-2 flex items-center gap-2">
-                  <ArrowUpDown size={12} className="text-slate-400 shrink-0" />
-                  <div className="flex-1 flex items-center gap-2">
-                    <input 
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        value={data.imageOffsetY ?? 50} 
-                        onChange={(e) => updateField('imageOffsetY', Number(e.target.value))}
-                        className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
-                        title="Ajustar posição vertical da imagem"
-                    />
-                    <span className="text-[10px] font-mono text-slate-400 w-6 text-right">{data.imageOffsetY ?? 50}%</span>
-                  </div>
-              </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase mb-1">ID (Automático)</label>
@@ -225,6 +209,32 @@ export const CardForm: React.FC<CardFormProps> = ({
               ))}
             </div>
           </div>
+          
+           {/* Shiny & Foil Toggles */}
+           <div className="flex gap-3">
+              <label className={`cursor-pointer flex items-center gap-2 px-3 py-2 border rounded text-xs font-bold uppercase transition-all flex-1 justify-center ${data.isShiny ? 'bg-yellow-100 border-yellow-300 text-yellow-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                   <input 
+                      type="checkbox" 
+                      checked={data.isShiny} 
+                      onChange={(e) => updateField('isShiny', e.target.checked)}
+                      className="sr-only"
+                   />
+                   <Sparkles size={14} className={data.isShiny ? 'text-yellow-500' : 'text-slate-400'} />
+                   Shiny
+              </label>
+              
+              <label className={`cursor-pointer flex items-center gap-2 px-3 py-2 border rounded text-xs font-bold uppercase transition-all flex-1 justify-center ${data.isFoil ? 'bg-purple-100 border-purple-300 text-purple-700 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                   <input 
+                      type="checkbox" 
+                      checked={data.isFoil} 
+                      onChange={(e) => updateField('isFoil', e.target.checked)}
+                      className="sr-only"
+                   />
+                   <Disc size={14} className={data.isFoil ? 'text-purple-500' : 'text-slate-400'} />
+                   Foil
+              </label>
+          </div>
+
         </div>
       </div>
 

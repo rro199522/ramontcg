@@ -4,7 +4,8 @@ import { MonsterData, INITIAL_MONSTER_DATA, ELEMENT_TYPES, SavedMonsterCard } fr
 import { MonsterForm } from './MonsterForm';
 import { MonsterPreview } from './MonsterPreview';
 import { generateCardArt, generateElementalTexture } from '../services/ai';
-import { Trash2, Copy, Camera, Sliders, ZoomIn, ZoomOut, Maximize, Save, PlayCircle, FileSpreadsheet } from 'lucide-react';
+import { Trash2, Copy, Camera, Sliders, ZoomIn, Maximize, Save, PlayCircle, FileSpreadsheet, ArrowRight, ArrowDown } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 // Reuse string calculation logic for now, but this can change for monsters
 const calculateStrings = (data: MonsterData) => {
@@ -62,13 +63,14 @@ const generateTSVRow = (data: MonsterData, dtStr: string) => {
     (passivesStr || "").replace(/[\n\r]+/g, " "), 
     movesStr,
     data.isShiny ? "X" : "",
-    data.isFoil ? "X" : ""
+    data.isFoil ? "X" : "",
+    (data.imageOffsetX || 50).toString()
   ];
   
   return fields.join('\t');
 };
 
-const HEADERS = "ID\tNome\tTipo\tHP\tPD\tD\tSpeed\tDefesa\tAtributos\tVulnerabilidades\tResistências\tInvulnerabilidades\tPassivas\tMovimentos\tShiny\tFoil";
+const HEADERS = "ID\tNome\tTipo\tHP\tPD\tD\tSpeed\tDefesa\tAtributos\tVulnerabilidades\tResistências\tInvulnerabilidades\tPassivas\tMovimentos\tShiny\tFoil\tImgX";
 
 export const MonsterPage: React.FC = () => {
   const [monsterData, setMonsterData] = useState<MonsterData>(INITIAL_MONSTER_DATA);
@@ -243,10 +245,12 @@ export const MonsterPage: React.FC = () => {
       
       const isShiny = (cols[14] || '').trim().toUpperCase() === 'X';
       const isFoil = (cols[15] || '').trim().toUpperCase() === 'X';
+      const imgX = cols[16] ? parseInt(cols[16]) : 50;
 
       const newData: MonsterData = {
         id, name, type, secondaryType, imageUrl: monsterData.imageUrl,
         imageOffsetY: monsterData.imageOffsetY || 50,
+        imageOffsetX: imgX,
         imageScale: monsterData.imageScale || 100,
         hitDie, pd, vd, pp: "0", speeds,
         // @ts-ignore
@@ -296,27 +300,31 @@ export const MonsterPage: React.FC = () => {
   };
 
   const handleDownload = async () => {
-     // @ts-ignore
-     if (typeof window.html2canvas !== 'undefined') {
-         const element = document.getElementById('preview-card-monster');
-         if(element) {
-             // @ts-ignore
-             const canvas = await window.html2canvas(element, { scale: 4, backgroundColor: null });
+     const element = document.getElementById('preview-card-monster');
+     if(element) {
+         try {
+             const canvas = await html2canvas(element, { scale: 4, backgroundColor: null });
              const link = document.createElement('a');
              link.download = `monster-${monsterData.id}.png`;
              link.href = canvas.toDataURL("image/png");
              link.click();
+         } catch (err) {
+             console.error("Download failed:", err);
+             alert("Erro ao gerar imagem.");
          }
-     } else {
-         alert("Biblioteca de imagem carregando...");
      }
   };
 
-  const updateImageScale = (delta: number) => {
-     setMonsterData(prev => ({ 
-         ...prev, 
-         imageScale: Math.max(50, Math.min(250, (prev.imageScale || 100) + delta)) 
-     }));
+  const updateImageScale = (val: number) => {
+     setMonsterData(prev => ({ ...prev, imageScale: val }));
+  };
+
+  const updateImageX = (val: number) => {
+    setMonsterData(prev => ({ ...prev, imageOffsetX: val }));
+  };
+ 
+  const updateImageY = (val: number) => {
+    setMonsterData(prev => ({ ...prev, imageOffsetY: val }));
   };
 
   return (
@@ -387,16 +395,59 @@ export const MonsterPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Zoom Controls (Image Zoom) */}
-                <div className="flex flex-col gap-1 md:col-span-2 border-t border-slate-100 pt-2">
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                            <Maximize size={14} /> Zoom Imagem
+                 {/* Image Adjustment Group */}
+                 <div className="md:col-span-2 border-t border-slate-100 pt-2">
+                     <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ajustes de Imagem</label>
+                     <div className="grid grid-cols-3 gap-4">
+                        {/* Zoom Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ZoomIn size={12} /> Zoom
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="50" 
+                                    max="250" 
+                                    value={monsterData.imageScale || 100} 
+                                    onChange={(e) => updateImageScale(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => updateImageScale(-10)} className="p-1 bg-slate-100 hover:bg-slate-200 rounded"><ZoomOut size={14}/></button>
-                            <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center">{Math.round(monsterData.imageScale || 100)}%</span>
-                            <button onClick={() => updateImageScale(10)} className="p-1 bg-slate-100 hover:bg-slate-200 rounded"><ZoomIn size={14}/></button>
+                        
+                        {/* X Position Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ArrowRight size={12} /> Posição X
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={monsterData.imageOffsetX ?? 50} 
+                                    onChange={(e) => updateImageX(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Y Position Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ArrowDown size={12} /> Posição Y
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={monsterData.imageOffsetY ?? 50} 
+                                    onChange={(e) => updateImageY(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+                                />
+                            </div>
                         </div>
                      </div>
                 </div>

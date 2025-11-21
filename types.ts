@@ -61,6 +61,7 @@ export interface MoveData {
 
   // Image Controls
   imageOffsetY: number;
+  imageOffsetX: number; // Added X Offset
   imageScale: number;
   
   // Visual Effects
@@ -95,6 +96,7 @@ export const INITIAL_MOVE_DATA: MoveData = {
   lvl10: "+2d6",
   lvl15: "+3d6",
   imageOffsetY: 50,
+  imageOffsetX: 50,
   imageScale: 100,
   isShiny: false,
   isFoil: false
@@ -133,6 +135,7 @@ export interface MonsterData extends Omit<MoveData, 'conditions' | 'description'
   passives: Passive[];      // Array of passives
   moves: MonsterMove[];     // Array of moves/levels
   imageOffsetY: number;     // Vertical offset percentage for image (0-100)
+  imageOffsetX: number;     // Horizontal offset percentage
   imageScale: number;       // Scale percentage (100 = 1x)
   isShiny: boolean;
   isFoil: boolean;
@@ -191,6 +194,7 @@ export const INITIAL_MONSTER_DATA: MonsterData = {
     { title: "Level 5", content: "Ember" }
   ],
   imageOffsetY: 50, // Default center
+  imageOffsetX: 50,
   imageScale: 100,
   isShiny: false,
   isFoil: false

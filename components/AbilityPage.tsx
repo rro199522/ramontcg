@@ -4,7 +4,8 @@ import { MoveData, INITIAL_MOVE_DATA, ELEMENT_TYPES, SavedMoveCard } from '../ty
 import { CardForm } from './CardForm';
 import { CardPreview } from './CardPreview';
 import { generateCardArt, generateElementalTexture } from '../services/ai';
-import { Trash2, Copy, Camera, Sliders, Maximize, ZoomOut, ZoomIn, Save, PlayCircle, FileSpreadsheet } from 'lucide-react';
+import { Trash2, Copy, Camera, Sliders, Maximize, Save, PlayCircle, FileSpreadsheet, ArrowRight, ArrowDown, ZoomIn } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 const calculateStrings = (data: MoveData) => {
   let hitString = "-";
@@ -58,13 +59,14 @@ const generateTSVRow = (data: MoveData, hitStr: string, dtStr: string) => {
     (data.description || "").replace(/[\n\r]+/g, " "),
     l1, l5, l10, l15,
     data.isShiny ? "X" : "",
-    data.isFoil ? "X" : ""
+    data.isFoil ? "X" : "",
+    (data.imageOffsetX || 50).toString()
   ];
   
   return fields.join('\t');
 };
 
-const HEADERS = "ID\tNome\tTipo\tPP\tPD\tAção\tDuração\tAlcance\tAcerto\tDT\tFOR\tAGI\tINT\tPRE\tVIG\tATR\tCondições\tDescrição\tLvl 1\tLvl 5\tLvl 10\tLvl 15\tShiny\tFoil";
+const HEADERS = "ID\tNome\tTipo\tPP\tPD\tAção\tDuração\tAlcance\tAcerto\tDT\tFOR\tAGI\tINT\tPRE\tVIG\tATR\tCondições\tDescrição\tLvl 1\tLvl 5\tLvl 10\tLvl 15\tShiny\tFoil\tImgX";
 
 export const AbilityPage: React.FC = () => {
   const [moveData, setMoveData] = useState<MoveData>(INITIAL_MOVE_DATA);
@@ -219,6 +221,7 @@ export const AbilityPage: React.FC = () => {
       
       const isShiny = (cols[22] || '').trim().toUpperCase() === 'X';
       const isFoil = (cols[23] || '').trim().toUpperCase() === 'X';
+      const imgX = cols[24] ? parseInt(cols[24]) : 50;
 
       const newData: MoveData = {
         id, name, type, imageUrl: moveData.imageUrl,
@@ -229,6 +232,7 @@ export const AbilityPage: React.FC = () => {
         hasScaling, addAtrToScaling,
         lvl1, lvl5, lvl10, lvl15,
         imageOffsetY: moveData.imageOffsetY || 50,
+        imageOffsetX: imgX,
         imageScale: moveData.imageScale || 100,
         isShiny,
         isFoil
@@ -276,27 +280,31 @@ export const AbilityPage: React.FC = () => {
   };
 
   const handleDownload = async () => {
-     // @ts-ignore
-     if (typeof window.html2canvas !== 'undefined') {
-         const element = document.getElementById('preview-card');
-         if(element) {
-             // @ts-ignore
-             const canvas = await window.html2canvas(element, { scale: 4, backgroundColor: null });
+     const element = document.getElementById('preview-card');
+     if(element) {
+         try {
+             const canvas = await html2canvas(element, { scale: 4, backgroundColor: null });
              const link = document.createElement('a');
              link.download = `card-${moveData.id}.png`;
              link.href = canvas.toDataURL("image/png");
              link.click();
+         } catch (err) {
+             console.error("Error downloading image:", err);
+             alert("Erro ao gerar o download da imagem.");
          }
-     } else {
-         alert("Biblioteca de imagem carregando...");
      }
   };
 
-  const updateImageScale = (delta: number) => {
-     setMoveData(prev => ({ 
-         ...prev, 
-         imageScale: Math.max(50, Math.min(250, (prev.imageScale || 100) + delta)) 
-     }));
+  const updateImageScale = (val: number) => {
+     setMoveData(prev => ({ ...prev, imageScale: val }));
+  };
+  
+  const updateImageX = (val: number) => {
+     setMoveData(prev => ({ ...prev, imageOffsetX: val }));
+  };
+  
+  const updateImageY = (val: number) => {
+     setMoveData(prev => ({ ...prev, imageOffsetY: val }));
   };
 
   return (
@@ -330,6 +338,7 @@ export const AbilityPage: React.FC = () => {
 
             {/* Controls Toolbar */}
             <div className="bg-white p-3 rounded border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Opacity Controls */}
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
                         <Sliders size={14} /> Opacidade UI
@@ -364,15 +373,59 @@ export const AbilityPage: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-1 md:col-span-2 border-t border-slate-100 pt-2">
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
-                            <Maximize size={14} /> Zoom Imagem
+                {/* Image Adjustment Group */}
+                <div className="md:col-span-2 border-t border-slate-100 pt-2">
+                     <label className="block text-xs font-bold text-slate-400 uppercase mb-2">Ajustes de Imagem</label>
+                     <div className="grid grid-cols-3 gap-4">
+                        {/* Zoom Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ZoomIn size={12} /> Zoom
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="50" 
+                                    max="250" 
+                                    value={moveData.imageScale || 100} 
+                                    onChange={(e) => updateImageScale(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                />
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <button onClick={() => updateImageScale(-10)} className="p-1 bg-slate-100 hover:bg-slate-200 rounded"><ZoomOut size={14}/></button>
-                            <span className="text-xs font-mono font-bold text-slate-700 w-12 text-center">{Math.round(moveData.imageScale || 100)}%</span>
-                            <button onClick={() => updateImageScale(10)} className="p-1 bg-slate-100 hover:bg-slate-200 rounded"><ZoomIn size={14}/></button>
+                        
+                        {/* X Position Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ArrowRight size={12} /> Posição X
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={moveData.imageOffsetX ?? 50} 
+                                    onChange={(e) => updateImageX(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Y Position Slider */}
+                        <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-1 text-slate-500 text-[10px] font-bold uppercase">
+                                <ArrowDown size={12} /> Posição Y
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="range" 
+                                    min="0" 
+                                    max="100" 
+                                    value={moveData.imageOffsetY ?? 50} 
+                                    onChange={(e) => updateImageY(Number(e.target.value))}
+                                    className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-600"
+                                />
+                            </div>
                         </div>
                      </div>
                 </div>

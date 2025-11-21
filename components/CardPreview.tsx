@@ -121,6 +121,8 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
   };
 
   const imageScale = data.imageScale || 100;
+  const offsetX = data.imageOffsetX ?? 50;
+  const offsetY = data.imageOffsetY ?? 50;
 
   return (
     <div 
@@ -167,7 +169,7 @@ export const CardPreview: React.FC<CardPreviewProps> = ({
                 alt="Card Art" 
                 className="w-full h-full object-cover opacity-100"
                 style={{ 
-                  objectPosition: `center ${data.imageOffsetY || 50}%`,
+                  objectPosition: `${offsetX}% ${offsetY}%`,
                   transform: `scale(${imageScale / 100})`,
                   transformOrigin: 'center'
                 }}

@@ -146,6 +146,9 @@ export const MonsterPreview: React.FC<MonsterPreviewProps> = ({ data, calculated
     </div>
   );
 
+  const offsetX = data.imageOffsetX ?? 50;
+  const offsetY = data.imageOffsetY ?? 50;
+
   return (
     <div 
       id="preview-card-monster"
@@ -191,7 +194,7 @@ export const MonsterPreview: React.FC<MonsterPreviewProps> = ({ data, calculated
                 alt="Monster Art" 
                 className="w-full h-full object-cover opacity-100"
                 style={{ 
-                  objectPosition: `center ${data.imageOffsetY}%`,
+                  objectPosition: `${offsetX}% ${offsetY}%`,
                   transform: `scale(${data.imageScale / 100})`,
                   transformOrigin: 'center'
                 }}
