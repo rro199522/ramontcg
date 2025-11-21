@@ -204,15 +204,6 @@ export const CardForm: React.FC<CardFormProps> = ({
           <div>
             <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-bold text-slate-500 uppercase">Tipo Elemental</label>
-                <button 
-                  onClick={onGenerateTexture}
-                  disabled={isGeneratingTexture}
-                  className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 uppercase flex items-center gap-1 disabled:opacity-50"
-                  title="Gerar um fundo personalizado"
-                >
-                  {isGeneratingTexture ? <Loader2 size={10} className="animate-spin" /> : <Palette size={10} />}
-                  {hasTexture ? 'Regerar Fundo do Tipo' : 'Gerar Fundo do Tipo'}
-                </button>
             </div>
             <div className="flex flex-wrap gap-2">
               {ELEMENT_TYPES.map((type) => (
